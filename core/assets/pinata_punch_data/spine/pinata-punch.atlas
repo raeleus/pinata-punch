@@ -1,0 +1,209 @@
+
+pinata-punch.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+arm
+  rotate: false
+  xy: 71, 7
+  size: 39, 13
+  orig: 39, 13
+  offset: 0, 0
+  index: -1
+body
+  rotate: false
+  xy: 207, 278
+  size: 13, 75
+  orig: 13, 75
+  offset: 0, 0
+  index: -1
+confetti-1
+  rotate: false
+  xy: 505, 463
+  size: 6, 6
+  orig: 6, 6
+  offset: 0, 0
+  index: -1
+confetti-2
+  rotate: true
+  xy: 505, 456
+  size: 5, 6
+  orig: 5, 6
+  offset: 0, 0
+  index: -1
+confetti-3
+  rotate: false
+  xy: 497, 460
+  size: 6, 9
+  orig: 6, 9
+  offset: 0, 0
+  index: -1
+confetti-4
+  rotate: false
+  xy: 79, 184
+  size: 9, 12
+  orig: 9, 12
+  offset: 0, 0
+  index: -1
+donkey
+  rotate: true
+  xy: 79, 198
+  size: 155, 126
+  orig: 155, 126
+  offset: 0, 0
+  index: -1
+donkey-left
+  rotate: false
+  xy: 1, 61
+  size: 115, 119
+  orig: 115, 119
+  offset: 0, 0
+  index: -1
+donkey-right
+  rotate: false
+  xy: 118, 48
+  size: 82, 66
+  orig: 82, 66
+  offset: 0, 0
+  index: -1
+fore-arm
+  rotate: true
+  xy: 497, 471
+  size: 40, 14
+  orig: 40, 14
+  offset: 0, 0
+  index: -1
+fore-leg
+  rotate: true
+  xy: 207, 231
+  size: 45, 13
+  orig: 45, 13
+  offset: 0, 0
+  index: -1
+hat
+  rotate: false
+  xy: 232, 343
+  size: 116, 86
+  orig: 116, 86
+  offset: 0, 0
+  index: -1
+hat-bottom
+  rotate: false
+  xy: 350, 370
+  size: 116, 59
+  orig: 116, 59
+  offset: 0, 0
+  index: -1
+hat-top
+  rotate: true
+  xy: 1, 3
+  size: 56, 68
+  orig: 56, 68
+  offset: 0, 0
+  index: -1
+head
+  rotate: false
+  xy: 159, 13
+  size: 33, 33
+  orig: 33, 33
+  offset: 0, 0
+  index: -1
+leg
+  rotate: false
+  xy: 468, 376
+  size: 43, 13
+  orig: 43, 13
+  offset: 0, 0
+  index: -1
+platform
+  rotate: false
+  xy: 1, 182
+  size: 76, 329
+  orig: 76, 329
+  offset: 0, 0
+  index: -1
+sign-left
+  rotate: false
+  xy: 118, 116
+  size: 80, 80
+  orig: 80, 80
+  offset: 0, 0
+  index: -1
+sign-miss
+  rotate: false
+  xy: 232, 431
+  size: 180, 80
+  orig: 180, 80
+  offset: 0, 0
+  index: -1
+sign-right
+  rotate: false
+  xy: 414, 431
+  size: 81, 80
+  orig: 81, 80
+  offset: 0, 0
+  index: -1
+spike
+  rotate: false
+  xy: 79, 355
+  size: 151, 156
+  orig: 151, 156
+  offset: 0, 0
+  index: -1
+spike-bottom
+  rotate: true
+  xy: 468, 391
+  size: 38, 43
+  orig: 38, 43
+  offset: 0, 0
+  index: -1
+spike-bottom-left
+  rotate: false
+  xy: 222, 286
+  size: 56, 55
+  orig: 56, 55
+  offset: 0, 0
+  index: -1
+spike-bottom-right
+  rotate: false
+  xy: 350, 313
+  size: 55, 55
+  orig: 55, 55
+  offset: 0, 0
+  index: -1
+spike-left
+  rotate: false
+  xy: 71, 22
+  size: 44, 37
+  orig: 44, 37
+  offset: 0, 0
+  index: -1
+spike-right
+  rotate: false
+  xy: 222, 253
+  size: 35, 31
+  orig: 35, 31
+  offset: 0, 0
+  index: -1
+spike-top
+  rotate: true
+  xy: 117, 11
+  size: 35, 40
+  orig: 35, 40
+  offset: 0, 0
+  index: -1
+spike-top-left
+  rotate: false
+  xy: 407, 313
+  size: 55, 55
+  orig: 55, 55
+  offset: 0, 0
+  index: -1
+spike-top-right
+  rotate: false
+  xy: 280, 286
+  size: 56, 55
+  orig: 56, 55
+  offset: 0, 0
+  index: -1

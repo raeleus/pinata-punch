@@ -1,0 +1,38 @@
+
+pinata-punch.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+button-down
+  rotate: false
+  xy: 1, 1
+  size: 188, 68
+  split: 67, 65, 27, 29
+  pad: 27, 26, 20, 20
+  orig: 188, 68
+  offset: 0, 0
+  index: -1
+button-up
+  rotate: false
+  xy: 676, 935
+  size: 188, 68
+  split: 67, 65, 27, 29
+  pad: 27, 26, 20, 20
+  orig: 188, 68
+  offset: 0, 0
+  index: -1
+font-export
+  rotate: false
+  xy: 1, 71
+  size: 243, 249
+  orig: 243, 249
+  offset: 0, 0
+  index: -1
+font-title-export
+  rotate: false
+  xy: 1, 322
+  size: 673, 681
+  orig: 673, 681
+  offset: 0, 0
+  index: -1
