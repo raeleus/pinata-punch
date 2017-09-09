@@ -30,12 +30,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
 import com.esotericsoftware.spine.Animation;
 import com.esotericsoftware.spine.AnimationState;
+import com.esotericsoftware.spine.AnimationState.TrackEntry;
 import com.esotericsoftware.spine.AnimationStateData;
 import com.esotericsoftware.spine.Event;
 import com.esotericsoftware.spine.Skeleton;
 import com.esotericsoftware.spine.SkeletonBounds;
 import com.esotericsoftware.spine.SkeletonData;
-import com.esotericsoftware.spine.Skin;
 import com.ray3k.pinatapunch.Core;
 import com.ray3k.pinatapunch.Entity;
 import com.ray3k.pinatapunch.states.GameState;
@@ -48,10 +48,10 @@ public class PlayerEntity extends Entity {
     private static final float HURT_DISTANCE = 50.0f;
     public static final float ATTACK_DISTANCE = 150.0f;
     private Array<Animation> attackAnimations;
-    private boolean readyToAttack;
-    private EnemyEntity targetEnemy;
     private Array<MoveType> moveQueue;
     private boolean keyIsDown;
+    private EnemyEntity targetEnemy;
+    private float attackTargetX;
     
     public static enum MoveType {
         LEFT, RIGHT
@@ -90,7 +90,7 @@ public class PlayerEntity extends Entity {
             @Override
             public void start(AnimationState.TrackEntry entry) {
                 if (entry.getAnimation().getName().equals("stand")) {
-                    readyToAttack = true;
+                    
                 }
             }
 
@@ -98,7 +98,10 @@ public class PlayerEntity extends Entity {
             public void event(AnimationState.TrackEntry entry, Event event) {
                 if (event.getData().getName().equals("attack")) {
                     PlayerEntity.this.gameState.playPunchSound();
-                    targetEnemy.hit();
+                    if (targetEnemy != null) {
+                        targetEnemy.hit();
+                        targetEnemy = null;
+                    }
                 } else if (event.getData().getName().equals("sound")) {
                     if (event.getString().equals("swoosh")) {
                         PlayerEntity.this.gameState.playSwooshSound();
@@ -114,7 +117,6 @@ public class PlayerEntity extends Entity {
             }
         });
         
-        readyToAttack = false;
         keyIsDown = false;
         moveQueue = new Array<MoveType>();
     }
@@ -149,98 +151,48 @@ public class PlayerEntity extends Entity {
             }
         }
         
-        float bestDistance = ATTACK_DISTANCE + 1;
-        boolean foundEnemyToAttack = false;
-        boolean clearMoveQueue = moveQueue.size > 0;
-        
-        for (Entity entity : gameState.getEntityManager().getEntities()) {
-            if (entity instanceof EnemyEntity) {
-                EnemyEntity enemy = (EnemyEntity) entity;
-                
-                float distance = Math.abs(getX() - enemy.getX());
-                
-                if (enemy.isAttacking() && !enemy.isRecovering() && distance < HURT_DISTANCE) {
-                    if (!animationState.getCurrent(0).getAnimation().getName().equals("hit")) {
-                        if (enemy.getMode() == EnemyEntity.Mode.LEFT) {
-                            skeleton.setFlipX(true);
-                        } else {
-                            skeleton.setFlipX(false);
-                        }
-                        animationState.setAnimation(0, "hit", false);
-                        gameState.playHitSound();
-                        new GameOverTimerEntity(gameState, 4.0f);
-                    }
-                } else if (distance < ATTACK_DISTANCE) {
-                    if (enemy.getMode() == EnemyEntity.Mode.NONE) {
-                        if (enemy.getX() < getX()) {
-                            enemy.setMode(EnemyEntity.Mode.LEFT);
-                        } else {
-                            enemy.setMode(EnemyEntity.Mode.RIGHT);
-                        }
-                    }
-                    
-                    boolean successfulAttack = false;
-                    if (moveQueue.size > 0 && moveQueue.first() == MoveType.LEFT && enemy.getX() < getX()) {
-                        clearMoveQueue = false;
-                        if (!enemy.isDestroyed() && (enemy.isAttacking() || enemy.isRecovering())) {
-                            successfulAttack = true;
-                        }
-                    } else if (moveQueue.size > 0 && moveQueue.first() == MoveType.RIGHT && enemy.getX() > getX()) {
-                        clearMoveQueue = false;
-                        if (!enemy.isDestroyed() && (enemy.isAttacking() || enemy.isRecovering())) {
-                            successfulAttack = true;
-                        }
-                    }
+        if (animationState.getCurrent(0).getAnimation().getName().equals("stand")) {
+            EnemyEntity closestEnemy = null;
+            float closestDistance = ATTACK_DISTANCE;
 
-                    if (readyToAttack) {
-                        if (successfulAttack) {
-                            readyToAttack = false;
-                            if (distance < bestDistance) {
-                                targetEnemy = enemy;
-                                bestDistance = distance;
-                                foundEnemyToAttack = true;
+            for (Entity entity : gameState.getEntityManager().getEntities()) {
+                if (entity instanceof EnemyEntity) {
+                    EnemyEntity enemy = (EnemyEntity) entity;
+
+                    float distance = Math.abs(getX() - enemy.getX());
+
+                    if (distance < HURT_DISTANCE) {
+                        TrackEntry trackEntry = enemy.getAnimationState().getCurrent(1);
+                        if (trackEntry == null || !trackEntry.getAnimation().getName().equals("die")) {
+                            hurt(enemy);
+                            closestEnemy = null;
+                            break;
+                        }
+                    } else if (distance < closestDistance && moveQueue.size > 0) {
+                        if (enemy.getAnimationState().getCurrent(1) == null || !enemy.getAnimationState().getCurrent(1).getAnimation().getName().equals("die")) {
+                            if (moveQueue.first() == MoveType.LEFT && enemy.getX() < getX()) {
+                                closestEnemy = enemy;
+                            } else if (moveQueue.first() == MoveType.RIGHT && enemy.getX() > getX()) {
+                                closestEnemy = enemy;
                             }
                         }
                     }
-                } else {
-                    enemy.getSkeleton().setSkin((Skin) null);
                 }
+            }
+
+            if (closestEnemy != null) {
+                attack(closestEnemy);
+            } else if (moveQueue.size > 0) {
+                miss();
             }
         }
         
-        if (clearMoveQueue) {
-            if (!animationState.getCurrent(0).getAnimation().getName().equals("miss")) {
-                if (moveQueue.peek() == MoveType.LEFT) {
-                    skeleton.setFlipX(true);
-                    skeleton.findBone("sign-miss").setScaleX(-1);
-                } else {
-                    skeleton.setFlipX(false);
-                    skeleton.findBone("sign-miss").setScaleX(1);
-                }
-
-
-                animationState.setAnimation(0, "miss", false);
-                animationState.addAnimation(0, "stand", true, 0.0f);
-
-                gameState.playSwooshSound();
-            }
-            
-            moveQueue.clear();
-        } else if (foundEnemyToAttack) {
-            if (moveQueue.first() == MoveType.LEFT) {
-                skeleton.setFlipX(true);
+        if (targetEnemy != null) {
+            if (targetEnemy.getX() < getX()) {
+                moveTowardsPoint(targetEnemy.getX() + 50.0f, getY(), 300.0f, delta);
             } else {
-                skeleton.setFlipX(false);
+                moveTowardsPoint(targetEnemy.getX() - 50.0f, getY(), 300.0f, delta);
             }
-            moveQueue.removeIndex(0);
-            animationState.setAnimation(0, attackAnimations.random(), false);
-            animationState.addAnimation(0, "stand", true, 0.0f);
-            targetEnemy.setAttacking(false);
-            targetEnemy.setMotion(0.0f, 0.0f);
-        }
-        
-        if (!readyToAttack && targetEnemy != null) {
-            moveTowardsPoint(targetEnemy.getX(), getY(), 500.0f, delta);
         }
         
         gameState.getGameCamera().position.x = getX();
@@ -267,5 +219,42 @@ public class PlayerEntity extends Entity {
     
     public SkeletonBounds getSkeletonBounds() {
         return skeletonBounds;
+    }
+    
+    private void hurt(EnemyEntity enemy) {
+        moveQueue.clear();
+        
+        skeleton.setFlipX(enemy.getX() < getX());
+        
+        animationState.setAnimation(0, "hit", false);
+        gameState.playHitSound();
+        new GameOverTimerEntity(gameState, 5.0f);
+    }
+    
+    private void attack(EnemyEntity enemy) {
+        skeleton.setFlipX(enemy.getX() < getX());
+        
+        animationState.setAnimation(0, attackAnimations.random(), false);
+        animationState.addAnimation(0, "stand", false, 0.0f);
+        moveQueue.removeIndex(0);
+        targetEnemy = enemy;
+    }
+    
+    private void miss() {
+        gameState.playSwooshSound();
+        skeleton.setFlipX(moveQueue.first() == MoveType.LEFT);
+        if (skeleton.getFlipX()) {
+            skeleton.findBone("sign-miss").setScaleX(-1);
+        } else {
+            skeleton.findBone("sign-miss").setScaleX(1);
+        }
+        
+        moveQueue.clear();
+        animationState.setAnimation(0, "miss", false);
+        animationState.addAnimation(0, "stand", true, 0.0f);
+    }
+
+    public AnimationState getAnimationState() {
+        return animationState;
     }
 }

@@ -20,28 +20,28 @@ body
   index: -1
 confetti-1
   rotate: false
-  xy: 505, 463
+  xy: 497, 463
   size: 6, 6
   orig: 6, 6
   offset: 0, 0
   index: -1
 confetti-2
   rotate: true
-  xy: 505, 456
+  xy: 505, 464
   size: 5, 6
   orig: 5, 6
   offset: 0, 0
   index: -1
 confetti-3
   rotate: false
-  xy: 497, 460
+  xy: 79, 187
   size: 6, 9
   orig: 6, 9
   offset: 0, 0
   index: -1
 confetti-4
-  rotate: false
-  xy: 79, 184
+  rotate: true
+  xy: 395, 310
   size: 9, 12
   orig: 9, 12
   offset: 0, 0
@@ -65,6 +65,13 @@ donkey-right
   xy: 118, 48
   size: 82, 66
   orig: 82, 66
+  offset: 0, 0
+  index: -1
+empty
+  rotate: false
+  xy: 350, 321
+  size: 57, 47
+  orig: 57, 47
   offset: 0, 0
   index: -1
 fore-arm
@@ -167,7 +174,7 @@ spike-bottom-left
   index: -1
 spike-bottom-right
   rotate: false
-  xy: 350, 313
+  xy: 409, 313
   size: 55, 55
   orig: 55, 55
   offset: 0, 0
@@ -195,7 +202,7 @@ spike-top
   index: -1
 spike-top-left
   rotate: false
-  xy: 407, 313
+  xy: 338, 264
   size: 55, 55
   orig: 55, 55
   offset: 0, 0

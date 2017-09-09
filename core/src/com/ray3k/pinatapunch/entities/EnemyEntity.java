@@ -27,7 +27,6 @@ package com.ray3k.pinatapunch.entities;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.FloatArray;
 import com.esotericsoftware.spine.AnimationState;
 import com.esotericsoftware.spine.AnimationStateData;
 import com.esotericsoftware.spine.Event;
@@ -47,15 +46,14 @@ public class EnemyEntity extends Entity {
     private GameState gameState;
     private Mode mode;
     private Type type;
-    private boolean attacking;
-    private boolean recovering;
-    private int hits;
-    private float attackMoveSpeed;
-    private float recoverySpeed;
     private static final float RECOVERY_REST_TIME = .75f;
-    private float restTime;
-    private int points;
     private static final float MINIMUM_SPACING = 100.0f;
+    private int points;
+    private float attackMoveSpeed;
+    private int hits;
+    private float recoveryTimer;
+    private float recoveryMoveSpeed;
+    private float recoveryTargetX;
     
     public static enum Mode {
         RIGHT, LEFT, NONE
@@ -74,17 +72,17 @@ public class EnemyEntity extends Entity {
         this.type = type;
         if (type == Type.DONKEY) {
             skeletonData = getCore().getAssetManager().get(Core.DATA_PATH + "/spine/donkey.json", SkeletonData.class);
-            recoverySpeed = 700.0f;
+            recoveryMoveSpeed = 700.0f;
             hits = 1;
             points = 10;
         } else if (type == Type.HAT) {
             skeletonData = getCore().getAssetManager().get(Core.DATA_PATH + "/spine/hat.json", SkeletonData.class);
-            recoverySpeed = 700.0f;
+            recoveryMoveSpeed = 700.0f;
             hits = 2;
             points = 30;
         } else {
             skeletonData = getCore().getAssetManager().get(Core.DATA_PATH + "/spine/spike.json", SkeletonData.class);
-            recoverySpeed = 2000.0f;
+            recoveryMoveSpeed = 2000.0f;
             hits = 3;
             points = 60;
         }
@@ -98,8 +96,6 @@ public class EnemyEntity extends Entity {
         
         skeletonBounds = new SkeletonBounds();
         skeletonBounds.update(skeleton, true);
-        setMode(Mode.NONE);
-        attacking = true;
         
         animationState.addListener(new AnimationState.AnimationStateAdapter() {
             @Override
@@ -108,8 +104,14 @@ public class EnemyEntity extends Entity {
                     ConfettiEntity confet = new ConfettiEntity(EnemyEntity.this.gameState);
                     PointAttachment confetPoint = (PointAttachment) skeleton.getAttachment("confetti", "confetti");
                     Vector2 location = confetPoint.computeWorldPosition(skeleton.findBone("body"), new Vector2());
-                    
                     confet.setPosition(location.x, location.y);
+                    
+                    for (int i = 0; i < 5; i++) {
+                        CandyEntity candy = new CandyEntity(EnemyEntity.this.gameState);
+                        candy.setPosition(location.x, location.y);
+                        candy.setMotion(MathUtils.random(700.0f), MathUtils.random(45.0f, 135.0f));
+                    }
+                    
                     EnemyEntity.this.gameState.addScore(points);
                 }
             }
@@ -122,7 +124,7 @@ public class EnemyEntity extends Entity {
             }
         });
         
-        recovering = false;
+        recoveryTimer = -1;
     }
 
     @Override
@@ -154,30 +156,36 @@ public class EnemyEntity extends Entity {
             }
         }
         
-        if (recovering) {
-            float recoveryTargetX;
+        skeleton.setFlipX(getX() < gameState.getPlayer().getX());
+        
+        if (recoveryTimer > 0) {
+            recoveryTimer -= delta;
+            if (recoveryTimer <= 0) {
+                recoveryTimer = -1;
+            }
             
-            if (skeleton.getFlipX()) {
-                recoveryTargetX = gameState.getPlayer().getX() - 75.0f;
+            moveTowardsPoint(recoveryTargetX, getY(), recoveryMoveSpeed, delta);
+        } else {
+            if (getX() < gameState.getPlayer().getX()) {
+                moveTowardsPoint(gameState.getPlayer().getX() - 10.0f, getY(), attackMoveSpeed, delta);
             } else {
-                recoveryTargetX = gameState.getPlayer().getX() + 75.0f;
+                moveTowardsPoint(gameState.getPlayer().getX() + 10.0f, getY(), attackMoveSpeed, delta);
             }
-            moveTowardsPoint(recoveryTargetX, getY(), recoverySpeed, delta);
-            
-            if (MathUtils.isEqual(getX(), recoveryTargetX)) {
-                restTime -= delta;
-                if (restTime <= 0) {
-                    attacking = true;
-                    recovering = false;
-                    restTime = RECOVERY_REST_TIME;
-
-                    if (skeleton.getFlipX()) {
-                        setMotion(attackMoveSpeed, 0.0f);
-                    } else {
-                        setMotion(attackMoveSpeed, 180.0f);
-                    }
-                }
+        }
+        
+        float distance = Math.abs(getX() - gameState.getPlayer().getX());
+        
+        if (!gameState.getPlayer().getAnimationState().getCurrent(0).getAnimation().getName().equals("hit") && animationState.getCurrent(1) == null && distance < PlayerEntity.ATTACK_DISTANCE) {
+            if (getX() < gameState.getPlayer().getX()) {
+                skeleton.setSkin((Skin) null);
+                skeleton.setSkin("left");
+            } else {
+                skeleton.setSkin((Skin) null);
+                skeleton.setSkin("right");
             }
+        } else {
+            skeleton.setSkin((Skin) null);
+            skeleton.setSkin("none");
         }
     }
 
@@ -206,21 +214,6 @@ public class EnemyEntity extends Entity {
 
     public void setMode(Mode mode) {
         this.mode = mode;
-        skeleton.setSkin((Skin)null);
-        if (mode == Mode.RIGHT) {
-            skeleton.setSkin("right");
-        } else if (mode == Mode.LEFT) {
-            skeleton.setSkin("left");
-            skeleton.setFlipX(true);
-        } else {
-            skeleton.setSkin("none");
-        }
-        
-        if (skeleton.getFlipX()) {
-            setMotion(attackMoveSpeed, 0.0f);
-        } else {
-            setMotion(attackMoveSpeed, 180.0f);
-        }
     }
 
     public Mode getMode() {
@@ -230,50 +223,33 @@ public class EnemyEntity extends Entity {
     public Skeleton getSkeleton() {
         return skeleton;
     }
-
-    public boolean isAttacking() {
-        return attacking;
-    }
-
-    public void setAttacking(boolean attacking) {
-        this.attacking = attacking;
-    }
     
     public void hit() {
         if (hits > 0) {
             hits--;
             if (hits <= 0) {
                 animationState.setAnimation(1, "die", false);
-                attacking = false;
-                recovering = false;
             } else {
-                recovering = true;
-                restTime = RECOVERY_REST_TIME;
-                
-                Vector2 temp = new Vector2();
-                skeleton.getBounds(new Vector2(), temp, new FloatArray());
-                if (type == Type.SPIKE_BALL) {
-                    if (mode == Mode.LEFT) {
-                        setMode(Mode.RIGHT);
-                        skeleton.setFlipX(false);
-                        addX(-temp.x);
-                    } else if (mode == Mode.RIGHT) {
-                        setMode(Mode.LEFT);
-                        skeleton.setFlipX(true);
-                        addX(temp.x);
+                recoveryTimer = RECOVERY_REST_TIME;
+                if (type == Type.HAT) {
+                    if (getX() < gameState.getPlayer().getX()) {
+                        recoveryTargetX = gameState.getPlayer().getX() - PlayerEntity.ATTACK_DISTANCE + .1f;
+                    } else {
+                        recoveryTargetX = gameState.getPlayer().getX() + PlayerEntity.ATTACK_DISTANCE - .1f;
+                    }
+                } else if (type == Type.SPIKE_BALL) {
+                    if (getX() < gameState.getPlayer().getX()) {
+                        recoveryTargetX = gameState.getPlayer().getX() + PlayerEntity.ATTACK_DISTANCE - .1f;
+                    } else {
+                        recoveryTargetX = gameState.getPlayer().getX() - PlayerEntity.ATTACK_DISTANCE + .1f;
                     }
                 }
-                setMotion(0.0f, 0.0f);
             }
         }
     }
 
     public Type getType() {
         return type;
-    }
-
-    public boolean isRecovering() {
-        return recovering;
     }
 
     public AnimationState getAnimationState() {
